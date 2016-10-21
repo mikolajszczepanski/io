@@ -24,18 +24,21 @@ public class Category {
 	 * @param type rodzaj @see TransactionType
 	 * @param color kolor transakcji
 	 */
-	public Category(int id, String name, User user, int type, String color) {
+	public Category(int id, String name, User user, TransactionType type, String color) {
 		this.id = id;
 		this.name = name;
 		this.user = user;
 		this.color = color;
-		if (type == TransactionType.REVENUE.getValue()) {
+		
+		this.type = type; //!
+		
+		/*if (type == TransactionType.REVENUE.getValue()) {
 			this.type = TransactionType.REVENUE;
 		} else if (type == TransactionType.SPENDING.getValue()) {
 			this.type = TransactionType.SPENDING;
 		} else{
 			throw new InvalidParameterException();
-		}
+		}*/
 	}
 	
 	/**
