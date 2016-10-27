@@ -3,7 +3,10 @@ package app;
 import static spark.Spark.*;
 import app.controllers.HomeController;
 import spark.Spark;
-
+import static spark.Spark.*;
+import app.controllers.AccountController;
+import app.controllers.HomeController;
+import spark.Spark;
 /**
  * Główna klasa z której aplikacja jest uruchamiana.
  * @see Register
@@ -45,7 +48,7 @@ public class App
     	  */
     	 
     	 register.add( new HomeController() );
-
+    	 register.add( new AccountController() );
     	 
     }
 }
