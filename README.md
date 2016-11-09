@@ -14,12 +14,13 @@ System zarządzania wydatkami w Java.
 1. Kopiujemy całe repozytorium do workspace 
 2. Uruchamiamy eclipse
 3. Importujemy projekt Maven z tego co dodaliśmy (PPM (na Project Explorer) ->Import->Import->Maven->Existing maven project), przechodzimy wizard'a 
-4. Zaciągamy zależnośći PPM na naszym projekcie->Maven->Update Project
-5. Czekamy aż wszystkie lib'y się załadują
-6. Uruchamamy XAMPP->włączamy Apache i Mysql, klikamy na admin w Mysql (przechodzimy na localhost/phpmyadmin)
-7. Tworzymy nową baze io_db
-8. Importujemy obraz bazy z projektu ( io_db.sql ) lub ściagamy z repo
-9. Gotowe
+4. Zmieniamy java compiler na jre8 w ustawieniach projektu.
+5. Zaciągamy zależnośći PPM na naszym projekcie->Maven->Update Project
+6. Czekamy aż wszystkie lib'y się załadują
+7. Uruchamamy XAMPP->włączamy Apache i Mysql, klikamy na admin w Mysql (przechodzimy na localhost/phpmyadmin)
+8. Tworzymy nową baze io_db
+9. Importujemy obraz bazy z projektu ( io_db.sql ) lub ściagamy z repo
+10. Gotowe
 
 ### Używane biblioteki/frameworki backend ###
 
