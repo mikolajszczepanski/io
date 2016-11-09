@@ -48,6 +48,20 @@ public class UserDaoImpl extends Dao implements UserDao {
 				+ ");";
 		return executeUpdateSqlQuery(sql);
 	}
+	/**
+	 * Metoda pozwalająca zmienić hasło użytkownikowi z podanym loginem w bazie danych.
+	 * @param username Nazwa użytkownika ( login )
+	 * @param newpassword Nowe hasło użytkownika ( hasło zostanie zshashowane w zapytaniu )
+	 * @return Wartość logiczna operacji
+	 */
+	@Override
+	public boolean changePassword(String username,String newpassword){
+		String sql = "UPDATE `users` "
+			    + "SET `password` =  SHA1('"
+				+ newpassword + "')"
+				+ " WHERE `username` = '" + username+"'";
+		return executeUpdateSqlQuery(sql);
+	}
 	
 	/**
 	 * Metoda zwraca użytkownika z podanym loginem z bazy danych
@@ -118,6 +132,20 @@ public class UserDaoImpl extends Dao implements UserDao {
 				+ "FROM users "
 				+ "WHERE username = '" + username + "' "
 				+ "AND password = SHA1('" + password + "')"));
+		return list.isEmpty() ? null : list.get(0);
+	}
+	/**
+	 * Metoda zwracająca użytkownika z podanym loginem i odpowiedzą na sekretne pytanie (hashowane podczas zapytania) z bazy danych
+	 * @param username Nazwa użytkownika ( login )
+	 * @param answer Sekretne pytanie
+	 * @return Użytkownik
+	 */
+	@Override
+	public User getUserByUsernameAndAnswer(String username, String answer){
+		List<User> list = convertResultToArray(executeSelectSqlQuery("SELECT * "
+				+ "FROM users "
+				+ "WHERE username = '" + username + "' "
+				+ "AND answer = SHA1('" + answer + "')"));
 		return list.isEmpty() ? null : list.get(0);
 	}
 	

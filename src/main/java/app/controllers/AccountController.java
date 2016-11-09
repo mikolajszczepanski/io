@@ -92,6 +92,69 @@ public class AccountController extends Controller {
         }, new FreeMarkerEngine());
 	}
 	
+	/**
+	 * Żądanie post dla /restore 
+	 * sprawdza czy odpowiedź na pytanie pokrywa
+	 * się z tą, którą ustawił użytkownik
+	 */
+	public void postRestore(){
+		post("/restore", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			String answer = request.queryParams("answer");
+			String username = request.session().attribute("username");
+			request.session().removeAttribute("username") ;
+			request.session(false);
+			UserDao userDao = new UserDaoImpl();
+			User user = userDao.getUserByUsernameAndAnswer(username,answer);
+			if(user != null){
+
+				request.session(true);
+				request.session().attribute("user", user);
+				return new ModelAndView(attributes, "account/resetpassword.ftl");
+			}
+			else{
+				attributes.put("error","Odpowiedź jest błędna.");
+			}
+            return new ModelAndView(attributes, "account/login.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * Żądanie post dla /resetpassword
+	 * ustawia nowe hasło (wypisuje ewentualne wymagania co do hasła) 
+	 */
+	public void postResetPassword(){
+		post("/resetpassword", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			String password = request.queryParams("password");
+			UserDao userDao = new UserDaoImpl();
+			String passwordRepeat = request.queryParams("passwordRepeat");
+			if(password.equals(passwordRepeat) && userDao.changePassword(user.getUsername(),password)){
+				List<String> errors = new ArrayList<String>();
+				if(password == null || password.length() < 5 || password.length() > 40){
+					errors.add("Hasło nie mieści się w przedziale (5,40).");
+				}
+				if(!password.matches(".*\\d+.*")) errors.add("Hasło musi zawierać co najmniej jedną cyfre.");
+				if(password.equals(password.toLowerCase())) errors.add("Hasło musi zawierać co najmniej jedną dużą litere.");
+				if(password.equals(password.toUpperCase())) errors.add("Hasło musi zawierać co najmniej jedną małą litere.");
+				if(!errors.isEmpty()) {
+					attributes.put("errors", errors);
+					return new ModelAndView(attributes, "account/resetpassword.ftl");
+				}
+				user.setAttempts(User.MAX_ATTEMPTS);
+				userDao.updateUser(user);
+				request.session().removeAttribute("user");
+				request.session(false);
+			}
+			else{
+				attributes.put("error","Hasła nie zgadzają się.");
+				return new ModelAndView(attributes, "account/resetpassword.ftl");
+			}
+			attributes.put("success","Pomyślnie zmieniono hasło, zaloguj się.");
+            return new ModelAndView(attributes, "account/login.ftl");
+        }, new FreeMarkerEngine());
+	}
 		
 	/**
 	 * żądanie get dla /logout
@@ -196,6 +259,9 @@ public class AccountController extends Controller {
 		postRegister();
 		getLogin();
 		postLogin();
+		getLogout();
+		postRestore();
+		postResetPassword();
 	}
 
 }
