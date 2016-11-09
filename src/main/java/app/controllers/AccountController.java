@@ -20,6 +20,78 @@ import spark.template.freemarker.FreeMarkerEngine;
  * klasa obsługująca żądania związane z logowaniem, rejstracją oraz zmianą hasła
  */
 public class AccountController extends Controller {
+	
+	/**
+	 * żądanie get dla /login 
+	 */
+	public void getLogin(){
+		get("/login", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			String error = request.queryParams("error");
+			
+			if(error != null && error.equals("auth")){
+				attributes.put("error", "Zaloguj się, aby uzyskać dostęp");
+			}
+			else if(error != null){
+				attributes.put("error", "Nieznany błąd");
+			}
+			
+			User user = request.session().attribute("user");
+			if(user != null){
+				response.redirect("/app/index");
+				return null;
+			}
+
+            return new ModelAndView(attributes, "account/login.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /login
+	 * sprawdza czy użytkownik jest w bazie
+	 * oraz czy nie przekroczył prób logowania
+	 */
+	public void postLogin(){
+		post("/login", (request, response) -> {	
+			String username = request.queryParams("login");
+			String password = request.queryParams("password");
+			UserDao userDao = new UserDaoImpl();
+			User loginuser = userDao.getUserByUsernameAndPassword(username, password);
+			String errorMessage = "Nieprawidły login lub hasło.";
+			if(loginuser != null && loginuser.getAttempts() > 0 ){
+				request.session(true);
+				request.session().attribute("user", loginuser); 
+				loginuser.setAttempts(User.MAX_ATTEMPTS);
+				userDao.updateUser(loginuser);
+				response.redirect("/app/index");
+			}
+			Map<String, Object> attributes = new HashMap<>();
+			
+			User user = userDao.getUserByUsername(username);
+			
+			if(user != null && loginuser == null){
+				int attempts = user.getAttempts() - 1;
+				user.setAttempts(attempts);
+				userDao.updateUser(user);
+				if(attempts > 0){
+					errorMessage += "Pozostało prób: " + attempts;
+				}
+				else{
+					errorMessage = "Konto zostało zablokowane";
+				}
+				if(attempts == 0){
+					attributes.put("question", user.getHelpQuestion().getQuestion());
+					request.session(true);
+					request.session().attribute("username", user.getUsername());
+					return new ModelAndView(attributes, "account/restore.ftl");//password reset
+				}
+			}
+			
+			attributes.put("error", errorMessage);
+			return new ModelAndView(attributes, "account/login.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
 		
 	/**
 	 * żądanie get dla /logout
@@ -122,6 +194,8 @@ public class AccountController extends Controller {
 	public void addRoutes() {
 		getRegister();
 		postRegister();
+		getLogin();
+		postLogin();
 	}
 
 }

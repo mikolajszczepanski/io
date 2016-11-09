@@ -89,6 +89,36 @@ public class UserDaoImpl extends Dao implements UserDao {
 			
 		return array;	
 	}
-
+	
+	@Override
+	/**
+	 * Metoda aktualizująca użytkownika w bazie danych. Metoda nie aktualizuje hasła ani sekretnej odpowiedzi z uwagi iż te dane zostają zhashowane
+	 * @param user Użytkownik
+	 * @return wartość logiczna operacji
+	 */
+	public boolean updateUser(User user){
+		String sql = "UPDATE `users` "
+			    + "SET `attempts` = '" + user.getAttempts() + "',"
+			    + "`username` = '" + user.getUsername() + "',"
+			    + "`email` = '" + user.getEmail() + "',"
+			    + "`monthy_limit` = " + user.getMonthlyLimit() + ""
+				+ " WHERE `users`.`id` = " + user.getId();
+		
+		return executeUpdateSqlQuery(sql);
+	}
+	@Override
+	/**
+	 * Metoda zwraca użytkownika z podanym loginem i hasłem z bazy danych
+	 * @param username Nazwa użytkownika ( login )
+	 * @param password Hasło użytkownika
+	 * @return Użytkownik
+	 */
+	public User getUserByUsernameAndPassword(String username, String password) {
+		List<User> list = convertResultToArray(executeSelectSqlQuery("SELECT * "
+				+ "FROM users "
+				+ "WHERE username = '" + username + "' "
+				+ "AND password = SHA1('" + password + "')"));
+		return list.isEmpty() ? null : list.get(0);
+	}
 	
 }
