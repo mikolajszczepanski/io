@@ -63,47 +63,6 @@ public class UserDaoImpl extends Dao implements UserDao {
 		return executeUpdateSqlQuery(sql);
 	}
 	
-	/**
-	 * Metoda zwraca użytkownika z podanym loginem z bazy danych
-	 * @param username Nazwa użytkownika ( login )
-	 * @return Użytkownik
-	 */
-	@Override
-	public User getUserByUsername(String username) {
-		List<User> list = convertResultToArray(executeSelectSqlQuery("SELECT * "
-				+ "FROM users "
-				+ "WHERE username = '" + username + "'"));
-		return list.isEmpty() ? null : list.get(0);
-	}
-	
-	private List<User> convertResultToArray(Result result){
-		List<User> array = new ArrayList<>();
-		ResultSet resultSet = result.getResultSet();
-		
-		try {
-			while(resultSet.next()){
-				HelpQuestionDao questionDao = new HelpQuestionDaoImpl(databaseContext);
-				HelpQuestion question = questionDao.getHelpQuestion(result.getResultSet().getInt("help_question_id"));
-				array.add( new User(
-						resultSet.getInt("id"),
-						resultSet.getString("username"),
-						resultSet.getString("password"),
-						resultSet.getString("email"),
-						question,
-						resultSet.getString("answer"),
-						resultSet.getInt("attempts"),
-						resultSet.getDouble("monthy_limit")
-						)
-				);
-				}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		result.close();
-			
-		return array;	
-	}
-	
 	@Override
 	/**
 	 * Metoda aktualizująca użytkownika w bazie danych. Metoda nie aktualizuje hasła ani sekretnej odpowiedzi z uwagi iż te dane zostają zhashowane
@@ -119,6 +78,39 @@ public class UserDaoImpl extends Dao implements UserDao {
 				+ " WHERE `users`.`id` = " + user.getId();
 		
 		return executeUpdateSqlQuery(sql);
+	}
+	/**
+	 * Metoda zwracająca liste wszystkich użytkowników z bazy danych
+	 * @return Lista użytkowników
+	 */
+	@Override
+	public List<User> getAllUsers(){
+		return convertResultToArray(executeSelectSqlQuery("SELECT * FROM users"));
+	}
+	
+	/**
+	 * Metoda zwracjąca użytkownika o określonym id z bazy danych
+	 * @param id Id Użytkownika
+	 * @return Użytkownik z podanym id
+	 */
+	@Override
+	public User getUser(int id){
+		List<User> list = convertResultToArray(executeSelectSqlQuery("SELECT * "
+				+ "FROM users "
+				+ "WHERE id = " + id));
+		return list.isEmpty() ? null : list.get(0);
+	}
+	/**
+	 * Metoda zwraca użytkownika z podanym loginem z bazy danych
+	 * @param username Nazwa użytkownika ( login )
+	 * @return Użytkownik
+	 */
+	@Override
+	public User getUserByUsername(String username) {
+		List<User> list = convertResultToArray(executeSelectSqlQuery("SELECT * "
+				+ "FROM users "
+				+ "WHERE username = '" + username + "'"));
+		return list.isEmpty() ? null : list.get(0);
 	}
 	@Override
 	/**
@@ -148,5 +140,35 @@ public class UserDaoImpl extends Dao implements UserDao {
 				+ "AND answer = SHA1('" + answer + "')"));
 		return list.isEmpty() ? null : list.get(0);
 	}
+	
+	
+	private List<User> convertResultToArray(Result result){
+		List<User> array = new ArrayList<>();
+		ResultSet resultSet = result.getResultSet();
+		
+		try {
+			while(resultSet.next()){
+				HelpQuestionDao questionDao = new HelpQuestionDaoImpl(databaseContext);
+				HelpQuestion question = questionDao.getHelpQuestion(result.getResultSet().getInt("help_question_id"));
+				array.add( new User(
+						resultSet.getInt("id"),
+						resultSet.getString("username"),
+						resultSet.getString("password"),
+						resultSet.getString("email"),
+						question,
+						resultSet.getString("answer"),
+						resultSet.getInt("attempts"),
+						resultSet.getDouble("monthy_limit")
+						)
+				);
+				}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		result.close();
+			
+		return array;	
+	}
+
 	
 }
