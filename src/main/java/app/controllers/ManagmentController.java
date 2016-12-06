@@ -32,6 +32,39 @@ import spark.template.freemarker.FreeMarkerEngine;
 public class ManagmentController extends Controller {
 
 	/**
+	 * żądzanie get dla /app/balancesheet
+	 * wypisuje transakcje
+	 */
+	public void getBalanceSheet(){
+		get("/app/balancesheet", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			List<Transaction> transactions = transactionsDao.getAllByUser(user);
+			attributes.put("transactions", transactions);
+            return new ModelAndView(attributes, "managment/balancesheet.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/balancesheet
+	 * odpowiada za  usuwanie transakcji
+	 */
+	public void postBalanceSheet(){
+		post("/app/balancesheet", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			String transactionId = request.queryParams("ID");
+			if(transactionId!=null)
+				transactionsDao.removeTransactionByTransactionIdAndUserId(user,Integer.parseInt(transactionId));
+			return new ModelAndView(attributes, "managment/balancesheet.ftl");
+        }, new FreeMarkerEngine());
+	}	
+	
+	/**
 	 * Żądanie get dla /app/checkrevenues wypisuje przychody
 	 */
 	public void getRevenues() {
