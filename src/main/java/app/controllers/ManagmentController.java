@@ -30,31 +30,57 @@ import spark.template.freemarker.FreeMarkerEngine;
  * klasa obsługująca żądzania związanie z działaniem aplikacji
  */
 public class ManagmentController extends Controller {
-	
 
-	
-	
-	
+	/**
+	 * Żądanie get dla /app/checkrevenues wypisuje przychody
+	 */
+	public void getRevenues() {
+		get("/app/checkrevenues", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			List<Transaction> transactions = transactionsDao.getTransactionByType(user, TransactionType.REVENUE);
+			attributes.put("transactions", transactions);
+			return new ModelAndView(attributes, "managment/checkrevenues.ftl");
+		}, new FreeMarkerEngine());
+	}
+
+	/**
+	 * Żądanie post dla /app/checkrevenues odpowiada za usuwanie przychodów
+	 */
+	public void postRevenues() {
+		get("/app/checkrevenues", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			String transactionId = request.queryParams("ID");
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			if (transactionId != null)
+				transactionsDao.removeTransactionByTransactionIdAndUserId(user, Integer.parseInt(transactionId));
+			return new ModelAndView(attributes, "managment/checkrevenues.ftl");
+		}, new FreeMarkerEngine());
+	}
+
 	/**
 	 * sprawdzenie czy sesja użytkownika nie wygasła
 	 */
-	public void authentication(){
+	public void authentication() {
 		before("/app/*", (request, response) -> {
 			User user = request.session().attribute("user");
-			if(user == null){
+			if (user == null) {
 				response.redirect("/login?error=auth");
 			}
 		});
 	}
-	
+
 	/**
 	 * udostępnia żądania dla ścieżek
 	 */
 	@Override
 	public void addRoutes() {
 		authentication();
-		//Dodawac ponizej nowe scieżki:
-		
+		// Dodawac ponizej nowe scieżki:
+		getRevenues();
+		postRevenues();
 	}
-
 }
