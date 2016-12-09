@@ -30,7 +30,83 @@ import spark.template.freemarker.FreeMarkerEngine;
  * klasa obsługująca żądzania związanie z działaniem aplikacji
  */
 public class ManagmentController extends Controller {
-
+	
+	/**
+	 * żądzanie get dla /app/index
+	 * odpowiada za rysowanie wykresu dla obecnego miesiąca
+	 * i wypisywanie informacji na temat limitu miesięcznego
+	 */
+	public void getIndex() {
+		get("/app/index", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			List<String> info = new ArrayList<>();
+			Calendar now = Calendar.getInstance(); 
+			Calendar mycal = new GregorianCalendar(now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DATE));
+			double spendings = transactionsDao.getAmountByUserAndType(user,TransactionType.SPENDING );
+			if(user != null){
+				if(user.haveMonthyLimit()){
+					if(spendings < user.getMonthlyLimit() && (user.getMonthlyLimit()-spendings)<=50 )
+						attributes.put("warning","Uwaga! Zostało już tylko " +String.format("%.2f", (user.getMonthlyLimit()-spendings)) + "zł do uzyskania limitu! Oszczędzaj... ");
+					else if(spendings == user.getMonthlyLimit()) attributes.put("warning","Uwaga! Osiągnięto limit miesięczny!");
+					else if (spendings > user.getMonthlyLimit())
+						attributes.put("alert","Przekroczono limit o " + String.format("%.2f", (spendings - user.getMonthlyLimit())) + "zł");
+					else if (spendings < user.getMonthlyLimit()){
+						info.add("Miesięczny limit: " + user.getMonthlyLimit() + "zł.");
+						info.add(String.format("%.2f",spendings) + "zł zostało wydane.");
+						info.add(String.format("%.2f", ((double)user.getMonthlyLimit()-spendings))+ "zł pozostało." );
+						info.add("Wydawaj średnio "
+								+ String.format("%.2f", ((double)user.getMonthlyLimit()-spendings)/(mycal.getActualMaximum(Calendar.DAY_OF_MONTH)-mycal.get(Calendar.DATE)))
+								+ " zł dziennie  aby starczyło do końca miesiąca!");
+					}
+				}
+			}
+			
+			if(info.size()>0) attributes.put("info",info);
+			//wykres
+            return new ModelAndView(attributes, "managment/index.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/index
+	 * odpowiada za rysowanie wykresu dla zadanego okresu
+	 * oraz wypisywanie informacji o limicie miesięcznym
+	 */
+	public void postIndex() {
+		post("/app/index", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			String month = request.queryParams("month");
+			Calendar now = Calendar.getInstance(); 
+			Calendar mycal = new GregorianCalendar(now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DATE));
+			List<String> info = new ArrayList<>();
+			double spendings = transactionsDao.getAmountByUserAndType(user,TransactionType.SPENDING );
+			if(user.haveMonthyLimit()){
+				if(spendings < user.getMonthlyLimit() && (user.getMonthlyLimit()-spendings)<=50 )
+					attributes.put("warning","Uwaga! Zostało już tylko " +String.format("%.2f", (user.getMonthlyLimit()-spendings)) + "zł do uzyskania limitu! Oszczędzaj... ");
+				else if(spendings == user.getMonthlyLimit()) attributes.put("warning","Uwaga! Osiągnięto limit miesięczny!");
+				else if (spendings > user.getMonthlyLimit())
+					attributes.put("alert","Przekroczono limit o " + String.format("%.2f", (spendings - user.getMonthlyLimit())) + "zł");
+				else if (spendings < user.getMonthlyLimit()){
+					info.add("Miesięczny limit: " + user.getMonthlyLimit() + "zł.");
+					info.add(String.format("%.2f",spendings) + "zł zostało wydane.");
+					info.add(String.format("%.2f", ((double)user.getMonthlyLimit()-spendings))+ "zł pozostało." );
+					info.add("Wydawaj średnio "
+							+ String.format("%.2f", ((double)user.getMonthlyLimit()-spendings)/(mycal.getActualMaximum(Calendar.DAY_OF_MONTH)-mycal.get(Calendar.DATE)))
+							+ " zł dziennie  aby starczyło do końca miesiąca!");
+				}
+				if(info.size()>0) attributes.put("info",info);
+			}
+            return new ModelAndView(attributes, "managment/index.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	
 	/**
 	 * żądzanie get dla /app/balancesheet
 	 * wypisuje transakcje
@@ -113,6 +189,8 @@ public class ManagmentController extends Controller {
 	public void addRoutes() {
 		authentication();
 		// Dodawac ponizej nowe scieżki:
+		getIndex();
+		postIndex();
 		getRevenues();
 		postRevenues();
 	}

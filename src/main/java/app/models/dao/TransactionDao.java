@@ -46,4 +46,20 @@ public interface TransactionDao {
 	 * @return Wartość logiczna operacji
 	 */
 	boolean addTransaction(Transaction transaction);
+	
+	/**
+	 * Metoda zwrająca sume kwot transakcji określonego typu
+	 * @param user Użytkownik 
+	 * @param type Typ transakcji (jednorazowa,cotygodniowa,miesięczna)
+	 * @return Suma kwot
+	 */
+	double getAmountByUserAndType(User user, TransactionType type );
+	/**
+	 * Metoda pomocnicza zwracająca wykonywalny kod javascriptowy
+	 * @param user Użytkownik
+	 * @param Month Miesiąc 1-12
+	 * @param type Typ transakcji (jednorazowa,cotygodniowa,miesięczna)
+	 * @return Kod javascript
+	 */
+	String getTransactionValueByUserAndMonthAndType(User user,int Month,TransactionType type);
 }

@@ -179,5 +179,116 @@ public class TransactionDaoImpl extends Dao implements TransactionDao {
 				+ "ORDER BY date DESC";
 		return convertResultToArray(executeSelectSqlQuery(sql));
 	}
+	/**
+	 * Metoda zwrająca sume kwot transakcji określonego typu z bazy danych
+	 * @param user Użytkownik 
+	 * @param type Typ transakcji (jednorazowa,cotygodniowa,miesięczna)
+	 * @return Suma kwot
+	 */
+	@Override
+	public double getAmountByUserAndType(User user, TransactionType type ){
+		if(user == null){
+			return 0.0;
+		}
+		int userId = user.getId();
+		Calendar now = Calendar.getInstance();
+		int year=now.get(Calendar.YEAR);
+		int month=now.get(Calendar.MONTH)+1;
+		int day=now.get(Calendar.DATE);
+		
+		
+		String sql = "SELECT SUM(amount) As SUMPERIOD FROM transactions WHERE `user_id` = " 
+				 + userId 
+				 + " AND `date` >= \"" 
+				 + year 
+				 + "-"+ month + "-" 
+				 + "01"
+				 + " 00:00:00\""
+				 + " AND `date` < \"" 
+				 + (month==12?(now.get(Calendar.YEAR)+1) : now.get(Calendar.YEAR))  + "-" 
+				 + (month==12?1:(month+1))+ "-" 
+				 + "01"
+				 + " 00:00:00\""
+				 + " AND `transaction_type` = " + type.getValue();
+		return sumPeriod(executeSelectSqlQuery(sql));
+	}
+	/**
+	 * Metoda pomocnicza zwracająca wykonywalny kod javascriptowy tworzony poprzez zapytania do bazy danych
+	 * @param user Użytkownik
+	 * @param Month Miesiąc 1-12
+	 * @param type Typ transakcji (jednorazowa,cotygodniowa,miesięczna)
+	 * @return Kod javascript
+	 */
+	@Override
+	public String  getTransactionValueByUserAndMonthAndType(User user,int Month,TransactionType type ){
+		if(user == null){
+			return null;
+		}
+		int userId = user.getId();
+		List<Double> arrayValue = new ArrayList<>();
+		Calendar now = Calendar.getInstance(); 
+		if(Month==0){
+			for(int i=1;i<=12;++i){
+				double sum=0;
+				String sql = "SELECT SUM(amount) As SUMPERIOD FROM transactions WHERE `user_id` = " 
+						 + userId 
+						 + " AND `date` >= \"" 
+						 + now.get(Calendar.YEAR) + "-"
+						 + i 
+						 + "-01 00:00:00\""
+						 + " AND `date` < \"" 
+						 + (i==12?now.get(Calendar.YEAR)+1 : now.get(Calendar.YEAR))  
+						 + "-"+ ((i+1)==13?1:i+1)
+						 + "-01 00:00:00\""
+						 + " AND `transaction_type` = " + type.getValue();
+				sum = sumPeriod(executeSelectSqlQuery(sql));
+				arrayValue.add(sum);
+			}
+		}
+		else{
+			Calendar mycal = new GregorianCalendar(now.get(Calendar.YEAR),Month-1,1);
+			int days =mycal.getActualMaximum(Calendar.DAY_OF_MONTH);
+			for(int i=1;i<=days;++i){
+				double sum=0;
+				String sql = "SELECT SUM(amount) As SUMPERIOD FROM transactions WHERE `user_id` = " 
+						 + userId 
+						 + " AND `date` >= \"" 
+						 + now.get(Calendar.YEAR)  + "-"
+						 + Month + "-" 
+						 + i
+						 + " 00:00:00\""
+						 + " AND `date` < \"" 
+						 + (Month==12&&i==31?(now.get(Calendar.YEAR)+1) : now.get(Calendar.YEAR))  + "-" 
+						 + (i==days&&Month==12?1:(i==days?Month+1:Month))+ "-" 
+						 + ((i+1)==days+1?1:i+1)
+						 + " 00:00:00\""
+						 + " AND `transaction_type` = " + type.getValue();
+				sum = sumPeriod(executeSelectSqlQuery(sql));
+				arrayValue.add(sum);
+			}
+		}
+		StringBuilder transactionstring = new StringBuilder(new String("["));
+        for (Double transaction :arrayValue) {
+        	transactionstring.append(transaction);
+			transactionstring.append(',');
+		}
+        transactionstring.setCharAt(transactionstring.length()-1, ']');
+        return transactionstring.toString();
+	}
+	private double sumPeriod (Result result){
+		double sum = 0;
+		ResultSet resultSet = result.getResultSet();
+		try {
+			while(resultSet.next()){
+				UserDao userDao = new UserDaoImpl(databaseContext);
+				sum = resultSet.getInt("SUMPERIOD");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		result.close();
+			
+		return sum;
+	}
 	
 }
