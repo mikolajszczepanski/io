@@ -169,6 +169,40 @@ public class ManagmentController extends Controller {
 			return new ModelAndView(attributes, "managment/checkrevenues.ftl");
 		}, new FreeMarkerEngine());
 	}
+	
+	/**
+	 * żądanie get dla /app/checkspendings
+	 * wypisuje wydatki
+	 */
+	public void getSpendings(){
+		get("/app/checkspendings", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			List<Transaction> transactions = transactionsDao.getTransactionByType(user, TransactionType.SPENDING);
+			attributes.put("transactions", transactions);
+			
+            return new ModelAndView(attributes, "managment/checkspendings.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/checkspendings
+	 * odpowiada za usuwanie wydatków
+	 */
+	public void postSpendings(){
+		post("/app/checkspendings", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			String transactionId = request.queryParams("ID");
+			TransactionDao transactionsDao = new TransactionDaoImpl();
+			if(transactionId!=null)
+				transactionsDao.removeTransactionByTransactionIdAndUserId(user,Integer.parseInt(transactionId));
+			return new ModelAndView(attributes, "managment/checkspendings.ftl");
+        }, new FreeMarkerEngine());
+	}
 
 	/**
 	 * sprawdzenie czy sesja użytkownika nie wygasła
@@ -193,5 +227,9 @@ public class ManagmentController extends Controller {
 		postIndex();
 		getRevenues();
 		postRevenues();
+		getSpendings();
+		postSpendings();
+		getBalanceSheet();
+		postBalanceSheet();
 	}
 }
