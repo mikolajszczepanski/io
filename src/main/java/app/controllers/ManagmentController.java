@@ -22,6 +22,7 @@ import app.models.dao.UserDaoImpl;
 import app.models.Category;
 import app.models.DatabaseContext;
 import app.models.FrequencyType;
+import app.models.Pair;
 import app.models.Constants;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
@@ -203,6 +204,87 @@ public class ManagmentController extends Controller {
 			return new ModelAndView(attributes, "managment/checkspendings.ftl");
         }, new FreeMarkerEngine());
 	}
+	
+	/**
+	 * żądanie get dla /app/categories/add
+	 * dodawanie transakcji przez użytkownika
+	 */
+	public void getAddCategory(){
+		get("/app/categories/add", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			String transactionTypeStr = request.queryParams("transactionType");
+			System.out.println(transactionTypeStr);
+			int type = TransactionType.REVENUE.getValue();
+			try{
+				if(TransactionType.SPENDING.getValue() == Integer.parseInt(transactionTypeStr)){
+					type = TransactionType.SPENDING.getValue();
+				}
+			}catch(Exception ex){}
+			
+			attributes.put("user", user);
+			String return_url = request.queryParams("return_url");
+			if(return_url != null){
+				attributes.put("return_url", return_url);
+			}
+			List<Pair<String,Integer>> typeList = new ArrayList<>();
+			typeList.add(new Pair<String,Integer>("Wydatki",TransactionType.SPENDING.getValue()));
+			typeList.add(new Pair<String,Integer>("Przychody",TransactionType.REVENUE.getValue()));
+			attributes.put("types", typeList);	
+			attributes.put("activeCategory", type);
+            return new ModelAndView(attributes, "managment/addcategory.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/categories/add
+	 * dodawanie wprowadzonej przez użytkownika  transakcji do bazy
+	 */
+	public void postAddCategory(){
+		post("/app/categories/add", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			
+			DatabaseContext databaseContext = new DatabaseContext();
+			
+			String categoryName = request.queryParams("categoryName");
+			String categoryType = request.queryParams("categoryType");
+			String categoryColor = request.queryParams("categoryColor");
+			String returnUrl = request.queryParams("return_url");
+			String transactionTypeStr = request.queryParams("transactionType");
+			System.out.println(transactionTypeStr);
+			
+			
+			System.out.println("categoryName=" + categoryName);
+			
+			boolean correctData = false;
+			int type = Integer.parseInt(categoryType);
+			
+			List<String> errors = Category.validate(categoryName, type, categoryColor);
+			for (String iterable_element : errors) {
+				System.out.println(iterable_element);
+			}
+			if(errors.size() == 0){
+				CategoryDao categoryDao = new CategoryDaoImpl(databaseContext);
+				Category category = new Category(-1, categoryName, user, type, categoryColor);
+				correctData = categoryDao.addCategory(category);
+			}
+			
+			if(correctData){
+				response.redirect(returnUrl + "?category=" + categoryName);
+			}
+			attributes.put("errors",errors);
+			List<Pair<String,Integer>> typeList = new ArrayList<>();
+			typeList.add(new Pair<String,Integer>("Wydatki",TransactionType.SPENDING.getValue()));
+			typeList.add(new Pair<String,Integer>("Przychody",TransactionType.REVENUE.getValue()));
+			attributes.put("types", typeList);
+			attributes.put("return_url",returnUrl);
+			attributes.put("activeCategory", type);
+			return new ModelAndView(attributes, "managment/addcategory.ftl");
+        }, new FreeMarkerEngine());
+		
+	}
 
 	/**
 	 * sprawdzenie czy sesja użytkownika nie wygasła
@@ -231,5 +313,7 @@ public class ManagmentController extends Controller {
 		postSpendings();
 		getBalanceSheet();
 		postBalanceSheet();
+		postAddCategory();
+		getAddCategory();
 	}
 }
