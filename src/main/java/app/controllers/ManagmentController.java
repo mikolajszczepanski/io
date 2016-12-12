@@ -285,6 +285,64 @@ public class ManagmentController extends Controller {
         }, new FreeMarkerEngine());
 		
 	}
+	
+	/**
+	 * Żądanie get dla /app/settings
+	 */
+	public void getSettings(){
+		get("/app/settings", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			String monthlyLimit = "";
+			if(user != null){
+				monthlyLimit = user.getMonthlyLimitAsString() != null ? user.getMonthlyLimitAsString() : "0.0";
+			}
+			attributes.put("monthlyLimit", monthlyLimit);
+            return new ModelAndView(attributes, "managment/settings.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * Żądanie post dla /app/settings
+	 */
+	public void postSettings(){
+		post("/app/settings", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			
+			String monthlyLimitStr = request.queryParams("monthlyLimit");
+			String isMonthyLimitActiveStr = request.queryParams("isMonthlyLimitActive");
+			boolean isMonthyLimitActive = isMonthyLimitActiveStr != null ? true : false;
+			try{
+				if(isMonthyLimitActive){
+					double monthlyLimit = Double.parseDouble(monthlyLimitStr);
+					if(monthlyLimit <= 0){
+						throw new Exception("Limit miesięczny nie może być mniejszy niż zero.");
+					}
+					user.setMonthlyLimit(monthlyLimit);
+				}
+				else{
+					user.setMonthlyLimit(0);
+				}
+				UserDao userDao = new UserDaoImpl();
+				if(!userDao.updateUser(user)){throw new Exception("SQL Error");}
+			}
+			catch(NumberFormatException | NullPointerException ex){
+				List<String> errors = new ArrayList<String>();
+				errors.add("Podano nieprawidłową wartość");
+				attributes.put("errors", errors);
+			}
+			catch(Exception ex){
+				List<String> errors = new ArrayList<String>();
+				errors.add(ex.getMessage());
+				attributes.put("errors", errors);
+			}
+			attributes.put("monthlyLimit", user.getMonthlyLimitAsString() != null ? user.getMonthlyLimitAsString() : "0.0");
+			return new ModelAndView(attributes, "managment/settings.ftl");
+		}, new FreeMarkerEngine());
+	}
 
 	/**
 	 * sprawdzenie czy sesja użytkownika nie wygasła
@@ -315,5 +373,7 @@ public class ManagmentController extends Controller {
 		postBalanceSheet();
 		postAddCategory();
 		getAddCategory();
+		getSettings();
+		postSettings();
 	}
 }
