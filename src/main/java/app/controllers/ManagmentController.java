@@ -287,6 +287,56 @@ public class ManagmentController extends Controller {
 	}
 	
 	/**
+	 * żądanie get dla /app/transaction/add/:type
+	 * przekierowuje do odpowiedniej strony z dodawaniem transakcji
+	 */
+	public void getAddTransaction(){
+		get("/app/transaction/add/:type", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			String return_url = request.queryParams("return_url");
+			String type = request.params("type");
+			attributes.put("transaction_type", type);
+			String categoryStr = request.queryParams("category");
+			if(return_url != null){
+				attributes.put("return_url", return_url);
+			}
+			Category category = null;
+			if(categoryStr != null){
+				category = (new CategoryDaoImpl()).getCategoryByName(categoryStr,user);
+			}
+			
+			CategoryDao categoryDao = new CategoryDaoImpl();
+			List<Category> categories = null;
+			List<String> errors = new ArrayList<>();
+			
+			if(type.equals(Constants.SPENDING)){
+				categories = categoryDao.getAllByUserAndType(user,TransactionType.SPENDING);
+				attributes.put("transaction_title", "Wydatek");
+				attributes.put("transaction_type_name", Constants.SPENDING);
+				attributes.put("transaction_type_id", TransactionType.SPENDING.getValue());
+			}
+			else if(type.equals(Constants.REVENUE)){
+				categories = categoryDao.getAllByUserAndType(user,TransactionType.REVENUE);
+				attributes.put("transaction_title", "Przychód");
+				attributes.put("transaction_type_name", Constants.REVENUE);
+				attributes.put("transaction_type_id", TransactionType.REVENUE.getValue());
+			}
+			else{
+				errors.add("Nie właściwy typ.");
+				categories = new ArrayList<>();
+			}
+			if(errors.size() > 0){
+				attributes.put("errors", errors);
+			}
+			attributes.put("activeCategory", category);
+			attributes.put("categories", categories);
+            return new ModelAndView(attributes, "managment/addtransaction.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
 	 * Żądanie get dla /app/settings
 	 */
 	public void getSettings(){
@@ -300,6 +350,108 @@ public class ManagmentController extends Controller {
 			}
 			attributes.put("monthlyLimit", monthlyLimit);
             return new ModelAndView(attributes, "managment/settings.ftl");
+        }, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/transaction/add/:type
+	 * sprawdzenie parametrów transakcji oraz dodanie transakcji
+	 */
+	public void postAddTransaction(){
+		post("/app/transaction/add/:type", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			
+			DatabaseContext databaseContext = new DatabaseContext();
+			String type = request.params("type");
+			
+			String transactionAmountAsString = request.queryParams("transactionAmount");
+			String transactionCategoryIdAsString = request.queryParams("transactionCategoryId");
+			String transactionFrequencyTypeAsString = request.queryParams("transactionFrequencyType");
+			String transactionTypeAsString = request.queryParams("transactionType");
+			
+			List<String> errors = new ArrayList<>();
+			TransactionType transactionType = null;
+			try{
+				int tempTransationType = Integer.parseInt(transactionTypeAsString);
+				if(tempTransationType == TransactionType.REVENUE.getValue()){
+					transactionType = TransactionType.REVENUE;
+					attributes.put("transaction_title", "Przychód");
+					attributes.put("transaction_type_name", Constants.REVENUE);					
+				}
+				else if(tempTransationType == TransactionType.SPENDING.getValue()){
+					transactionType = TransactionType.SPENDING;
+					attributes.put("transaction_title", "Wydatek");
+					attributes.put("transaction_type_name", Constants.SPENDING);
+				}
+				else{
+					throw new Exception("Nieprawidłowy typ transakcji.");
+				}
+			}catch(NumberFormatException ex){
+				transactionType = TransactionType.REVENUE;
+			}
+			try{
+				if(transactionCategoryIdAsString == null || transactionCategoryIdAsString.length() == 0){
+					throw new NumberFormatException("Podano nieprawidłową kategorię.");
+				}
+				double transactionAmount = Double.parseDouble(transactionAmountAsString);
+				int transactionCategoryId = Integer.parseInt(transactionCategoryIdAsString);
+				int tempFrequencyType = Integer.parseInt(transactionFrequencyTypeAsString); 
+				
+				if(transactionAmount <= 0){
+					throw new Exception("Ilość nie może być ujemna bądź równa zero.");
+				}
+				
+				FrequencyType transactionFrequencyType = null;
+				
+				if(tempFrequencyType == FrequencyType.ONCE.getValue()){
+					transactionFrequencyType = FrequencyType.ONCE;
+				}
+				else if(tempFrequencyType == FrequencyType.WEEKLY.getValue()){
+					transactionFrequencyType = FrequencyType.WEEKLY;
+				}
+				else if(tempFrequencyType == FrequencyType.MONTHLY.getValue()){
+					transactionFrequencyType = FrequencyType.MONTHLY;
+				}
+				else{
+					throw new Exception("Nieprawidłowy typ częstości.");
+				}
+				
+				
+				
+				CategoryDao categoryDao = new CategoryDaoImpl(databaseContext);
+				Category category = categoryDao.getCategory(transactionCategoryId);
+				
+				Transaction transaction = new Transaction(
+						-1, 
+						user, 
+						category, 
+						transactionAmount, 
+						transactionFrequencyType, 
+						transactionType, 
+						new Date());
+				
+				TransactionDao transactionDao = new TransactionDaoImpl(databaseContext);
+				if(transactionDao.addTransaction(transaction)){
+					response.redirect("/app/balancesheet");
+				}
+				else{
+					throw new Exception("Nie udało się dodać transakcji.");
+				}
+				
+			}catch(Exception ex){
+				errors.add(ex.getMessage());
+			}
+			CategoryDao categoryDao = new CategoryDaoImpl(databaseContext);
+			List<Category> categories = categoryDao.getAllByUserAndType(user,transactionType);
+			
+			attributes.put("errors", errors);
+			attributes.put("categories", categories);
+			attributes.put("transaction_type_id", transactionType.getValue());
+			attributes.put("transaction_type", type);
+			
+            return new ModelAndView(attributes, "managment/addtransaction.ftl");
         }, new FreeMarkerEngine());
 	}
 	
@@ -355,7 +507,7 @@ public class ManagmentController extends Controller {
 			}
 		});
 	}
-
+	
 	/**
 	 * udostępnia żądania dla ścieżek
 	 */
@@ -375,5 +527,7 @@ public class ManagmentController extends Controller {
 		getAddCategory();
 		getSettings();
 		postSettings();
+		getAddTransaction();
+		postAddTransaction();
 	}
 }
