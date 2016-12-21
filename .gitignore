@@ -51,3 +51,6 @@ local.properties
 /target/
 
 /doc/
+
+# Database configuration
+settings.config

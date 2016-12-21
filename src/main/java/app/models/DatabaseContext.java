@@ -1,47 +1,35 @@
 package app.models;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
+
+import app.helpers.ConfigurationFromFile;
 
 /**
  * Klasa zawierająca połączenie i konfigurację z bazą danych
  */
 public class DatabaseContext {
 	
-	class Configuration{
-		
-		public Configuration(String user, String password,String databaseName){
-			this.user = user;
-			this.password = password;
-			this.databaseName = databaseName;
-		}
-		
-		public String getUser(){
-			return user;
-		}
-		public String getPassword(){
-			return password;
-		}
-		public String getDatabaseName(){
-			return databaseName;
-		}
-		
-		private String user;
-		private String password;
-		private String databaseName;
-	}
+	
 	
 	
 	private Connection connection = null;
-	private Configuration configuration = null;
+	private ConfigurationFromFile configuration = null;
 	
 	/**
 	 * Tworzy nową konfiguracje z bazą danych
 	 */
 	public DatabaseContext(){
 		
-		configuration = new Configuration("root","","io_db");
+		configuration = new ConfigurationFromFile("settings.config");
 		
 	}
 	
