@@ -456,6 +456,51 @@ public class ManagmentController extends Controller {
 	}
 	
 	/**
+	 * żądanie get dla /app/chart
+	 * rysowanie diagramu (domyślnie dla wydatków)
+	 */
+	public void getChart() {
+		get("/app/chart", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			attributes.put("SPENDING", "Wydatki");
+			attributes.put("other", "Przychody");
+			CategoryDao categoriesDao = new CategoryDaoImpl();
+			attributes.put("SPENDING", "Wydatki");
+			String chartString = categoriesDao.getChartStringByUserAndCategory(user,TransactionType.SPENDING);
+			if(chartString!=null) attributes.put("chartdata", chartString);
+			return new ModelAndView(attributes, "managment/chart.ftl");
+		}, new FreeMarkerEngine());
+	}
+	
+	/**
+	 * żądanie post dla /app/chart
+	 * rysowanie diagramów dla przychodów i dochodów
+	 */
+	public void postChart() {
+		post("/app/chart", (request, response) -> {
+			Map<String, Object> attributes = new HashMap<>();
+			User user = request.session().attribute("user");
+			attributes.put("user", user);
+			CategoryDao categoriesDao = new CategoryDaoImpl();
+			if(request.queryParams("SPENDING")!=null){
+				attributes.put("SPENDING", "Wydatki");
+				attributes.put("other", "Przychody");
+				String chartString = categoriesDao.getChartStringByUserAndCategory(user,TransactionType.SPENDING);
+				if(chartString!=null)attributes.put("chartdata", chartString);
+			}
+			else{
+				attributes.put("other", "Wydatki");
+				attributes.put("REVENUE", "Przychody");
+				String chartString = categoriesDao.getChartStringByUserAndCategory(user,TransactionType.REVENUE);
+				if(chartString!=null)attributes.put("chartdata", chartString);
+			}
+			return new ModelAndView(attributes, "managment/chart.ftl");
+		}, new FreeMarkerEngine());
+	}
+	
+	/**
 	 * Żądanie post dla /app/settings
 	 */
 	public void postSettings(){
@@ -529,5 +574,7 @@ public class ManagmentController extends Controller {
 		postSettings();
 		getAddTransaction();
 		postAddTransaction();
+		getChart();
+		postChart();
 	}
 }
