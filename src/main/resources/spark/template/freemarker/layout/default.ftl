@@ -42,7 +42,8 @@
     </head>
     <body>
     	<input id="reloadValue" type="hidden" name="reloadValue" value="" />
-    	<div class="container" style="padding:20px">
+    	<br>
+    	<div class="row">
 	        <#nested/>
         </div>
         <script type="text/javascript">    

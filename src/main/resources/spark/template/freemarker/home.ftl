@@ -1,7 +1,8 @@
 <#import "layout/default.ftl" as layout>
 <@layout.myLayout "Strona główna">
 
-	<div class="jumbotron">
+
+	<div class="container well">
          <h1>System planowania wydatków</h1>
          
          <#if error??>
