@@ -1,5 +1,4 @@
 package app.controllers;
-
 import static spark.Spark.*;
 
 import java.util.ArrayList;
@@ -19,11 +18,11 @@ import app.models.dao.TransactionDao;
 import app.models.dao.TransactionDaoImpl;
 import app.models.dao.UserDao;
 import app.models.dao.UserDaoImpl;
+import app.helpers.Constants;
 import app.models.Category;
 import app.models.DatabaseContext;
 import app.models.FrequencyType;
 import app.models.Pair;
-import app.models.Constants;
 import spark.ModelAndView;
 import spark.template.freemarker.FreeMarkerEngine;
 
@@ -66,7 +65,21 @@ public class ManagmentController extends Controller {
 			}
 			
 			if(info.size()>0) attributes.put("info",info);
-			//wykres
+			int CurrentMonth = mycal.get(Calendar.MONTH);
+			int CurrentYear =mycal.get(Calendar.YEAR);
+			int month=CurrentMonth+1;
+			attributes.put("title", Constants.monthPl[CurrentMonth] + " " + CurrentYear);
+			if(month==2){
+				if(CurrentYear%4==0) attributes.put("timescale", Constants.days+",'29'");
+				else attributes.put("timescale", Constants.days);
+			}
+			else if (month==4 || month==6|| month==9|| month==11)
+				attributes.put("timescale", Constants.days+",'29','30'");
+			else attributes.put("timescale", Constants.days+",'29','30','31'"); 
+			String transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,CurrentMonth+1,TransactionType.SPENDING);
+			attributes.put("SPENDING",transactionsString);
+			transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,CurrentMonth+1,TransactionType.REVENUE);
+			attributes.put("REVENUE",transactionsString);
             return new ModelAndView(attributes, "managment/index.ftl");
         }, new FreeMarkerEngine());
 	}
@@ -85,6 +98,32 @@ public class ManagmentController extends Controller {
 			String month = request.queryParams("month");
 			Calendar now = Calendar.getInstance(); 
 			Calendar mycal = new GregorianCalendar(now.get(Calendar.YEAR),now.get(Calendar.MONTH),now.get(Calendar.DATE));
+			if(month.equals("Year")){
+				attributes.put("title", "Zestawienie dla całego roku" + " " +  mycal.get(Calendar.YEAR));
+				String transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,0,TransactionType.SPENDING);
+				attributes.put("SPENDING",transactionsString);
+				transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,0,TransactionType.REVENUE);
+				attributes.put("REVENUE",transactionsString);
+			}
+			else{
+				int digitMonth = Integer.parseInt(month);
+				attributes.put("title",Constants.monthPl[digitMonth-1] + " " +  mycal.get(Calendar.YEAR));
+				if(month.equals("2")){
+					if( mycal.get(Calendar.YEAR)%4==0) attributes.put("timescale", Constants.days+",'29'");
+					else attributes.put("timescale", Constants.days);
+				}
+				else if (digitMonth==4 || digitMonth==6|| digitMonth==9|| digitMonth==11)
+					attributes.put("timescale", Constants.days+",'29','30'");
+				else attributes.put("timescale", Constants.days+",'29','30','31'"); 
+				
+
+				double spendings = transactionsDao.getAmountByUserAndType(user,TransactionType.SPENDING );
+				
+				String transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,digitMonth,TransactionType.SPENDING);
+				attributes.put("SPENDING",transactionsString);
+				transactionsString = transactionsDao.getTransactionValueByUserAndMonthAndType(user,digitMonth,TransactionType.REVENUE);
+				attributes.put("REVENUE",transactionsString);
+			}
 			List<String> info = new ArrayList<>();
 			double spendings = transactionsDao.getAmountByUserAndType(user,TransactionType.SPENDING );
 			if(user.haveMonthyLimit()){

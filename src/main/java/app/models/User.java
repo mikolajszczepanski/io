@@ -3,6 +3,8 @@ package app.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import app.helpers.Constants;
+
 /**
  * Klasa użytkownik zawiera:
  * - nazwę użytkownika
