@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import app.helpers.UserValidator;
 import app.models.DatabaseContext;
 import app.models.HelpQuestion;
 import app.models.User;
@@ -203,7 +204,7 @@ public class AccountController extends Controller {
 			Boolean checkData = false;
 			List<String> errors = new ArrayList<String>();
 			if(password.equals(passwordRepeat)){
-				List<String> errorsFromValidation = User.Validate(login, password, email, helpAnswer);
+				List<String> errorsFromValidation = UserValidator.Validate(login, password, email, helpAnswer);
 				errors.addAll(errorsFromValidation);
 				checkData = errorsFromValidation.size() == 0 ? true : false;
 			}
