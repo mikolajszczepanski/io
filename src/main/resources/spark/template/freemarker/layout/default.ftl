@@ -42,9 +42,19 @@
     </head>
     <body>
     	<input id="reloadValue" type="hidden" name="reloadValue" value="" />
-    	<br>
-    	<div class="row">
-	        <#nested/>
+    	<div class="header-panel shadow-z-2">
+		  <div class="container-fluid">
+		    <div class="row">
+		      <div class="col-xs-3">
+		        <h1>APPIO</h1>
+		      </div>
+		    </div>
+		  </div>
+		</div>
+    	<div class="container-fluid main" style="height: 599px;">
+    		<div class="row">
+	        	<#nested/>
+	        </div>
         </div>
         <script type="text/javascript">    
             $(document).ready(function () {

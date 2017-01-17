@@ -3,6 +3,7 @@ package app;
 import static spark.Spark.*;
 import app.controllers.HomeController;
 import app.controllers.ManagmentController;
+import app.controllers.Scheduler;
 import spark.Spark;
 import static spark.Spark.*;
 import app.controllers.AccountController;
@@ -51,6 +52,7 @@ public class App
     	 register.add( new HomeController() );
     	 register.add( new AccountController() );
     	 register.add( new ManagmentController() );
+    	 register.add( new Scheduler() );
     	 
     }
 }

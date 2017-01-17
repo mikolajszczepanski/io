@@ -49,7 +49,7 @@ public class Scheduler extends Controller{
 	 * @see Transaction
 	 * @see FrequencyType
 	 */
-	public void checkWeeklyransactions(){
+	public void checkWeeklyTransactions(){
 		get("/cron/cw", (request, response) -> {
 			StringBuilder sb = new StringBuilder();
 			DatabaseContext db = new DatabaseContext();
@@ -77,6 +77,6 @@ public class Scheduler extends Controller{
 	@Override
 	public void addRoutes() {
 		checkMonthlyTransactions();
-		checkWeeklyransactions();
+		checkWeeklyTransactions();
 	}
 }

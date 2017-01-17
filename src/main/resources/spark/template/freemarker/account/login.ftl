@@ -1,7 +1,11 @@
 <#import "../layout/default.ftl" as layout>
 <@layout.myLayout "Strona logowania">
 
-	<div class="col-md-6 col-md-offset-3 well">
+	<div class="pages col-xs-9" style="height: 743px;">
+					
+								<div class="row">
+									<div class="col-xs-10">
+										<div class="well ">
 		<form class="form-horizontal" method="post" action="/login">
 		  <fieldset>
 		    <legend>
@@ -52,6 +56,11 @@
     		</div>
 		  </fieldset>
 		</form>
+	</div>
+	
+	</div>
+	</div>
+	</div>
 	</div>
 
 </@layout.myLayout>
