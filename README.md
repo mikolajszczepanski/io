@@ -34,6 +34,7 @@ System zarządzania wydatkami w Java.
  * Bootstrap [http://getbootstrap.com/](http://getbootstrap.com/)
  * Material Design for Bootstrap [http://fezvrasta.github.io/bootstrap-material-design/](http://fezvrasta.github.io/bootstrap-material-design/)
  * Jquery [https://jquery.com/](https://jquery.com/)
+ * Bootstrap Datapicker (https://github.com/uxsolutions/bootstrap-datepicker)
 
 
 ### Komendy ###
