@@ -28,17 +28,19 @@
 	    <link rel="stylesheet" type="text/css" href="/bootstrap-material-design-4.0.1-dist/css/bootstrap-material-design.css">
 	    <link rel="stylesheet" type="text/css" href="/bootstrap-material-design-4.0.1-dist/css/ripples.min.css">
   
+  		<link rel="stylesheet" type="text/css" href="/bootstrap-datepicker-1.6.4-dist/css/bootstrap-datepicker.min.css">
   
   		<!-- Custom Styles -->
   		<link rel="stylesheet" type="text/css" href="/css/app.css">
   		
-  		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-	    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+  		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->>
+	    <script src="/js/jquery-3.1.1.min.js"></script>
 	    <!-- Include all compiled plugins (below), or include individual files as needed -->
-	    <script src="/bootstrap-3.3.6-dist/js/bootstrap.min.js"></script>
+	    <script src="/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
 	    <!-- Chart Library -->
 	    <script src="/js/Chart.js"></script>
-  		
+  		<script src="/bootstrap-datepicker-1.6.4-dist/js/bootstrap-datepicker.min.js"></script>
+  		<script src="/bootstrap-datepicker-1.6.4-dist/locales/bootstrap-datepicker.pl.min.js"></script>
     </head>
     <body>
     	<input id="reloadValue" type="hidden" name="reloadValue" value="" />

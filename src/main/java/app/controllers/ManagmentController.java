@@ -1,6 +1,8 @@
 package app.controllers;
 import static spark.Spark.*;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -409,6 +411,7 @@ public class ManagmentController extends Controller {
 			String transactionCategoryIdAsString = request.queryParams("transactionCategoryId");
 			String transactionFrequencyTypeAsString = request.queryParams("transactionFrequencyType");
 			String transactionTypeAsString = request.queryParams("transactionType");
+			String transactionDateAsString = request.queryParams("transactionDate");
 			
 			List<String> errors = new ArrayList<>();
 			TransactionType transactionType = null;
@@ -437,6 +440,9 @@ public class ManagmentController extends Controller {
 				double transactionAmount = Double.parseDouble(transactionAmountAsString);
 				int transactionCategoryId = Integer.parseInt(transactionCategoryIdAsString);
 				int tempFrequencyType = Integer.parseInt(transactionFrequencyTypeAsString); 
+
+				DateFormat df = new SimpleDateFormat("yyyy-MM-dd");
+				Date transactionDate = df.parse(transactionDateAsString);				
 				
 				if(transactionAmount <= 0){
 					throw new Exception("Ilość nie może być ujemna bądź równa zero.");
@@ -469,7 +475,7 @@ public class ManagmentController extends Controller {
 						transactionAmount, 
 						transactionFrequencyType, 
 						transactionType, 
-						new Date());
+						transactionDate);
 				
 				TransactionDao transactionDao = new TransactionDaoImpl(databaseContext);
 				if(transactionDao.addTransaction(transaction)){

@@ -65,6 +65,12 @@
 				</div>
 			</div>
 			<div class="form-group">
+				<label for="transactionDate" class="col-md-2 control-label">Data</label>
+				<div class="col-md-10">
+					<input type="text" name="transactionDate" class="form-control" id="transactionDate">
+				</div>
+			</div>
+			<div class="form-group">
 				<div class="col-md-10 col-md-offset-2">
 					<button type="submit" class="btn btn-primary">Dodaj</button>
 				</div>
@@ -72,6 +78,17 @@
 		</fieldset>
 	</form>
 </div>
+
+<script>
+$('#transactionDate').datepicker({
+    format: "yyyy-mm-dd",
+    todayBtn: true,
+    clearBtn: true,
+    language: "pl",
+    autoclose: true,
+    todayHighlight: true
+});
+</script>
 
 
 </@layout2.myInnerLayout>
