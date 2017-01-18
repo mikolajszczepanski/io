@@ -483,8 +483,7 @@ public class ManagmentController extends Controller {
 				}
 				else{
 					throw new Exception("Nie udało się dodać transakcji.");
-				}
-				
+				}	
 			}catch(Exception ex){
 				errors.add(ex.getMessage());
 			}
